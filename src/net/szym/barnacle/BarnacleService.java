@@ -24,6 +24,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Map;
 
+import net.szym.barnacle.Util.MACAddress;
 import android.app.Notification;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -32,6 +33,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
 import android.os.IBinder;
@@ -506,6 +508,25 @@ public class BarnacleService extends android.app.Service {
 //    			if (ids[i] == R.string.lan_essid) {
 //    				v = '"'+v+'"';
 //    			}
+    			// Special handling for Mesh Prefix 
+    			if (k.equalsIgnoreCase(getString(R.string.mesh_ip)))
+    			{
+    				if (v.matches("^[0-9]{1,3}$"))
+    				{
+    					// Convert the Mesh Prefix into a Mesh IP.
+    					WifiManager wifiManager = (WifiManager)getSystemService(Context.WIFI_SERVICE);
+    					if (wifiManager != null)
+    					{
+    						WifiInfo wifiInfo = wifiManager.getConnectionInfo();
+    						if (wifiInfo != null)
+    						{
+    							Log.d("BarnacleService", "Mac addr: " + wifiInfo.getMacAddress());
+    							MACAddress macAddress = MACAddress.parse(wifiInfo.getMacAddress());
+    							v += "." + macAddress.getOctet(4) + "." + macAddress.getOctet(5) + "." + macAddress.getOctet(6);
+    						}
+    					}
+    				}
+    			}
     			envlist.add("brncl_" + k + "=" + v);
     		}
     	}
